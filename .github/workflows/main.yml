@@ -17,11 +17,18 @@ jobs:
         with:
           node-version: 20
 
-      - name: Build Frontend
+      - name: Build Frontend (Static)
         run: |
           npm install
+          npm install -D @sveltejs/adapter-static
+          
+          # This command ensures 'fallback: index.html' is set in your config
+          # This is critical for the Go server to serve the SPA correctly.
+          sed -i "s/adapter: adapter(),/adapter: adapter({ fallback: 'index.html' }),/g" svelte.config.js
+          
           npm run build
-          # CLEAN and move files to the exact folder Go looks at for embedding
+          
+          # Prepare files for Go
           rm -rf server/ui
           mkdir -p server/ui
           cp -r build/* server/ui/
@@ -29,13 +36,13 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.25' # Using the version that worked for you
+          go-version: '1.25'
 
       - name: Compile Linux Binary
         run: |
           cd server
           export CGO_ENABLED=1
-          # We build from the server directory where the 'embed' logic lives
+          # Go will now bake the static files into the executable
           go build -ldflags="-s -w" -o ../watcharr-v301 .
 
       - name: Upload Binary
