@@ -27,7 +27,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.21.13' # Specific stable version
+          go-version: '1.25' # Specific stable version
 
       - name: Compile Linux Binary
         run: |
