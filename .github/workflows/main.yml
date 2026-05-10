@@ -21,21 +21,21 @@ jobs:
         run: |
           npm install
           npm run build
+          # CLEAN and move files to the exact folder Go looks at for embedding
+          rm -rf server/ui
           mkdir -p server/ui
           cp -r build/* server/ui/
 
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.25' # Specific stable version
+          go-version: '1.25' # Using the version that worked for you
 
       - name: Compile Linux Binary
         run: |
           cd server
-          # Force Go to use the locally installed version instead of downloading 1.25
-          export GOTOOLCHAIN=local
           export CGO_ENABLED=1
-          # Build the current directory package
+          # We build from the server directory where the 'embed' logic lives
           go build -ldflags="-s -w" -o ../watcharr-v301 .
 
       - name: Upload Binary
