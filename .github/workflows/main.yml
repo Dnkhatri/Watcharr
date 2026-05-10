@@ -1,0 +1,44 @@
+name: Build Watcharr v3.0.1
+
+on:
+  workflow_dispatch: # Allows you to trigger the build manually from the Actions tab
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Tag v3.0.1
+        uses: actions/checkout@v4
+        with:
+          ref: 'v3.0.1' # Forces the build to use the 3.0.1 source code
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Build Frontend
+        run: |
+          npm install
+          npm run build
+          # Move compiled frontend to the location expected by the Go server
+          mkdir -p server/ui
+          cp -r build/* server/ui/
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Compile Linux Binary
+        run: |
+          cd server
+          export CGO_ENABLED=1
+          # GOOS=linux ensures it works on your Linux machine
+          go build -ldflags="-s -w" -o ../watcharr-v301 main.go
+
+      - name: Upload Binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: watcharr-linux-v3.0.1
+          path: watcharr-v301
